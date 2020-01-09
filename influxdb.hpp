@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cstring>
 #include <cstdio>
+#include <map>
 
 #ifdef _WIN32
     #define NOMINMAX
@@ -82,6 +83,15 @@ namespace influxdb_cpp {
             _escape(v, ",= ");
             return (detail::tag_caller&)*this;
         }
+      detail::tag_caller& _ts(const std::map<std::string,std::string> & kv) {
+	for (auto &entry : kv) {
+            lines_ << ',';
+            _escape(entry.first, ",= ");
+            lines_ << '=';
+            _escape(entry.second, ",= ");
+	}
+            return (detail::tag_caller&)*this;
+        }
         detail::field_caller& _f_s(char delim, const std::string& k, const std::string& v) {
             lines_ << delim;
             _escape(k, ",= ");
@@ -150,6 +160,7 @@ namespace influxdb_cpp {
     namespace detail {
         struct tag_caller : public builder {
             detail::tag_caller& tag(const std::string& k, const std::string& v)       { return _t(k, v); }
+	    detail::tag_caller& tags(const std::map<std::string, std::string>& kv)    { return _ts(kv); }
             detail::field_caller& field(const std::string& k, const std::string& v)   { return _f_s(' ', k, v); }
             detail::field_caller& field(const std::string& k, bool v)                 { return _f_b(' ', k, v); }
             detail::field_caller& field(const std::string& k, short v)                { return _f_i(' ', k, v); }
